@@ -56,6 +56,20 @@ Username: postgres
 Password: postgres
 ```
 
+## Tooling
+
+Install the migration CLI if it is not available yet:
+
+```bash
+go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+```
+
+Check it:
+
+```bash
+migrate -version
+```
+
 ## Endpoints
 
 ```text
@@ -118,6 +132,66 @@ Regenerate docs after changing handlers or annotations:
 go run github.com/swaggo/swag/cmd/swag@v1.16.6 init -g cmd/api/main.go -o docs --parseInternal
 ```
 
+## Migrations
+
+Create a new migration file pair:
+
+```bash
+migrate create -ext sql -dir migrations -seq create_products_table
+```
+
+Or with Make:
+
+```bash
+make migrate-create NAME=create_products_table
+```
+
+This creates:
+
+```text
+migrations/000002_create_products_table.up.sql
+migrations/000002_create_products_table.down.sql
+```
+
+Run migrations:
+
+```bash
+go run ./cmd/migrate up
+```
+
+Rollback one migration:
+
+```bash
+go run ./cmd/migrate down
+```
+
+## Feature Generator
+
+Create boilerplate files for a new feature:
+
+```bash
+make feature NAME=product
+```
+
+For custom plural route/table names:
+
+```bash
+make feature NAME=category PLURAL=categories
+```
+
+The generator creates:
+
+```text
+internal/domain/{name}.go
+internal/usecase/{name}_usecase.go
+internal/repository/{name}_repository.go
+internal/delivery/http/{name}_handler.go
+migrations/{next}_create_{plural}_table.up.sql
+migrations/{next}_create_{plural}_table.down.sql
+```
+
+After generating, wire the new repository/usecase manually in `cmd/api/main.go`, pass the usecase into `internal/delivery/http.NewRouter`, and call `Register{Name}Routes` in `internal/delivery/http/router.go`.
+
 ## Tests
 
 ```bash
@@ -127,8 +201,27 @@ go test ./...
 ## Useful Commands
 
 ```bash
+make help
+make install-tools
+make test
+make tidy
+make swagger
+make feature NAME=product
+make migrate-create NAME=create_products_table
+make migrate-up
+make migrate-down
+make docker-up
+make docker-deps
+make docker-down
+make docker-build
+```
+
+Direct commands:
+
+```bash
 go test ./...
 go mod tidy
+migrate create -ext sql -dir migrations -seq create_products_table
 go run ./cmd/migrate up
 go run ./cmd/migrate down
 docker compose up --build
