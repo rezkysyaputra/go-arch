@@ -1,5 +1,5 @@
 GO ?= go
-GOCACHE ?= .gocache
+GOCACHE ?= $(CURDIR)/.gocache
 MIGRATION_NAME ?= $(NAME)
 FEATURE_NAME ?= $(NAME)
 FEATURE_PLURAL ?= $(PLURAL)
@@ -28,28 +28,26 @@ install-tools:
 	$(GO) install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 
 test:
-	GOCACHE=$(GOCACHE) $(GO) test ./...
+	set GOCACHE=$(GOCACHE)&& $(GO) test ./...
 
 tidy:
-	GOCACHE=$(GOCACHE) $(GO) mod tidy
+	set GOCACHE=$(GOCACHE)&& $(GO) mod tidy
 
 swagger:
-	GOCACHE=$(GOCACHE) $(GO) run github.com/swaggo/swag/cmd/swag@$(SWAG_VERSION) init -g cmd/api/main.go -o docs --parseInternal
+	set GOCACHE=$(GOCACHE)&& $(GO) run github.com/swaggo/swag/cmd/swag@$(SWAG_VERSION) init -g cmd/api/main.go -o docs --parseInternal
 
 feature:
-	@if [ -z "$(FEATURE_NAME)" ]; then echo "Usage: make feature NAME=product [PLURAL=products]"; exit 1; fi
-	GOCACHE=$(GOCACHE) $(GO) run ./tools/featuregen $(FEATURE_ARGS)
-	GOCACHE=$(GOCACHE) $(GO) fmt ./...
+	set GOCACHE=$(GOCACHE)&& $(GO) run ./tools/featuregen $(FEATURE_ARGS)
+	set GOCACHE=$(GOCACHE)&& $(GO) fmt ./...
 
 migrate-create:
-	@if [ -z "$(MIGRATION_NAME)" ]; then echo "Usage: make migrate-create NAME=create_products_table"; exit 1; fi
 	migrate create -ext sql -dir migrations -seq $(MIGRATION_NAME)
 
 migrate-up:
-	GOCACHE=$(GOCACHE) $(GO) run ./cmd/migrate up
+	set GOCACHE=$(GOCACHE)&& $(GO) run ./cmd/migrate up
 
 migrate-down:
-	GOCACHE=$(GOCACHE) $(GO) run ./cmd/migrate down
+	set GOCACHE=$(GOCACHE)&& $(GO) run ./cmd/migrate down
 
 docker-up:
 	docker compose up --build

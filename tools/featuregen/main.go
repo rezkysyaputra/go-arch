@@ -74,7 +74,7 @@ func newFeature(name, plural string) (feature, error) {
 	}
 
 	if plural == "" {
-		plural = name + "s"
+		plural = defaultPlural(name)
 	}
 	if !validName.MatchString(plural) {
 		return feature{}, fmt.Errorf("plural name must use snake_case")
@@ -161,6 +161,17 @@ func pascal(value string) string {
 	}
 
 	return strings.Join(parts, "")
+}
+
+func defaultPlural(name string) string {
+	switch {
+	case strings.HasSuffix(name, "s"):
+		return name + "es"
+	case strings.HasSuffix(name, "y"):
+		return strings.TrimSuffix(name, "y") + "ies"
+	default:
+		return name + "s"
+	}
 }
 
 func exit(message string) {
